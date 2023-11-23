@@ -1,4 +1,6 @@
+from itertools import permutations
 import numpy as np
+
 
 operations = ["+", "-", "*", "/"]
 
@@ -10,24 +12,8 @@ def safe_eval(expr):
         return float("nan")
 
 
-def combine(lst):
-    return combine_r([[]], lst)
-
-
-def combine_r(lst, remaining):
-    if len(remaining) == 0:
-        return lst
-    remaining = remaining.copy()
-    result = []
-    for i, v in enumerate(remaining):
-        cp = remaining.copy()
-        cp.pop(i)
-        result += combine_r([l + [v] for l in lst], cp)
-    return result
-
-
 def solve(a, b, c, d, goal=24.0):
-    combos = [list(i) for i in set(tuple(x) for x in combine([a, b, c, d]))]
+    combos = [list(i) for i in set(permutations([a, b, c, d]))]
 
     possibilities = [
         [
