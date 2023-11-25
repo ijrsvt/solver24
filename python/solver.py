@@ -1,3 +1,4 @@
+import concurrent.futures
 from itertools import permutations
 import numpy as np
 
@@ -12,22 +13,27 @@ def safe_eval(expr):
         return float("nan")
 
 
-def solve(a, b, c, d, goal=24.0):
-    combos = [list(i) for i in set(permutations([a, b, c, d]))]
-
-    possibilities = [
-        [
+def _all_operations(numbers, goal) -> list:
+    c = numbers
+    def _permutations():
+        for op1 in operations:
+            for op2 in operations:
+                for op3 in operations:
+                    yield from (
             f"((({c[0]} {op1} {c[1]}) {op2} {c[2]}) {op3} {c[3]})",
             f"({c[0]} {op1} ({c[1]} {op2} ({c[2]} {op3} {c[3]})))",
             f"(({c[0]} {op1} {c[1]}) {op2} ({c[2]} {op3} {c[3]}))",
             f"(({c[0]} {op1} ({c[1]} {op2} {c[2]})) {op3} {c[3]})",
             f"({c[0]} {op1} (({c[1]} {op2} {c[2]}) {op3} {c[3]}))",
-        ]
-        for c in combos
-        for op1 in operations
-        for op2 in operations
-        for op3 in operations
-    ]
-    possibilities = [p for tpl in possibilities for p in tpl]
+                    )
+    return filter(lambda x: np.isclose(safe_eval(x), goal), _permutations())
 
-    return list(filter(lambda x: np.isclose(safe_eval(x), goal), possibilities))
+def solve(a, b, c, d, goal=24.0):
+    combos = [list(i) for i in set(permutations([a, b, c, d]))]
+    results = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+        for result in executor.map(lambda c : list(_all_operations(c, goal=goal)), combos):
+            results.extend(result)
+    return results
+            
+
