@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="wasm_exec.js"></script>
+        <script>
+             
+            if (WebAssembly) {
+                 // WebAssembly.instantiateStreaming is not currently available in Safari
+                 if (WebAssembly && !WebAssembly.instantiateStreaming) { // polyfill
+                     WebAssembly.instantiateStreaming = async (resp, importObject) => {
+                        const source = await (await resp).arrayBuffer();
+                         return await WebAssembly.instantiate(source, importObject);
+                     };
+                 }  
+ 
+                 const go = new Go();
+                 WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then((result) => {
+                    go.run(result.instance);
+                 });
+            } else {
+               console.log("WebAssembly is not supported in your browser")
+            }
+ 
+            function submitWasm() {
+                document.getElementById("result").innerHTML = "";
+                let res = doPermutation(
+                    document.getElementById("number1").value,
+                    document.getElementById("number2").value,
+                    document.getElementById("number3").value,
+                    document.getElementById("number4").value,
+                );
+
+                for (let i = 0; i < res.length; i++) {
+                    document.getElementById("result").innerHTML += res[i] + "<br>";
+                }
+                
+                return false;
+            }
+        </script>
+    </head>
+    <body>
+        <main id="wasm"></main>
+
+        <!-- Form to input a number -->
+        <div id="form">
+
+            <label for="number1">Number 1:</label>
+            <input type="number" id="number1" name="number1" required><br>
+    
+            <label for="number2">Number 2:</label>
+            <input type="number" id="number2" name="number2" required><br>
+    
+            <label for="number3">Number 3:</label>
+            <input type="number" id="number3" name="number3" required><br>
+    
+            <label for="number4">Number 4:</label>
+            <input type="number" id="number4" name="number4" required><br>
+            <button id="submit" onclick="submitWasm()">Submit</button>
+        </div> 
+        <div id="result"></div>
+    </body>
+</html>
